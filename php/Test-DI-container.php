@@ -1,5 +1,6 @@
 <?php
 
+
 // Interface -----------------------------
 
 Interface IParams {
@@ -27,11 +28,11 @@ Interface IRepo{
 }
 
 Interface IModel{
-    public function getFormatedData() : array;
+    public function getFormatedData() : Iterator;
 }
 
 Interface IView{
-    public function renderView(array $data) : string;
+    public function renderView(array $data) : IView;
 }
 
 
@@ -170,14 +171,15 @@ Class CModel implements IModel, ITraitParams{
         $this->repo = $repo;
     }
 
-    public function getFormatedData() : array{
+    public function getFormatedData() : Iterator{
         $arr = $this->repo->fetchData();
-        $rtn = [
-            'fullName' => "{$arr['firstName']} {$arr['lastName']}",
-            'fullAge' => "{$arr['age']} ans",
-            'fullCountry' => "from {$arr['country']}",
-        ];
-        return $rtn;
+        foreach($arr as $row){
+            yield [
+                'fullName' => "{$row['firstName']} {$row['lastName']}",
+                'fullAge' => "{$row['age']} ans",
+                'fullCountry' => "from {$row['country']}",
+            ];
+        }
     }
 
 }
@@ -190,15 +192,16 @@ Class CView implements IView, ITraitParams{
         $this->loadParams($params);
     }
     
-    public function renderView(array $data) : string{
+    public function renderView(array $data) : IView{
         $str = "{$data['fullName']} ({$data['fullAge']}) {$data['fullCountry']}";
         if($this->params->get('uppercase')){
-           $str = strtoupper($str);
+           $str = mb_strtoupper($str);
         }
         if($this->params->get('reverse')){
             $str = strrev($str);
          }
-        return $str.PHP_EOL;
+        echo $str.PHP_EOL;
+        return $this;
     }
 
 }
@@ -216,23 +219,17 @@ $container = new CContainer(
 $model = $container->getModel();
 $view = $container->getView(
     new CParams([
-        'uppercase' => true
+        'uppercase' => false
     ])
 );
 
-echo $view->renderView(
-    $model->getFormatedData()
-);
-
-echo $view->saveParams()->setParams('reverse', true)->renderView(
-    $model->getFormatedData()
-);
-
-echo $view->restoreParams()->renderView(
-    $model->getFormatedData()
-);
-
-
+foreach($model->getFormatedData() as $count=>$viewData){
+    if(($count + 1)%2 === 0){
+        $view->saveParams()->setParams('uppercase', true)->renderView($viewData)->restoreParams();
+    }else{
+        $view->renderView($viewData);
+    }
+}
 
 
 //EOF

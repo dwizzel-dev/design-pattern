@@ -1,6 +1,4 @@
-{
-    "firstName":"Dwizzel",
-    "lastName":"Production", 
-    "age":16,
-    "country":"Africa" 
-}
+[
+    {"firstName":"Dwizzel", "lastName":"Production", "age":16, "country":"Africa"},
+    {"firstName":"Gros", "lastName":"Méné", "age":101, "country":"Lac St-Jean"}    
+]
